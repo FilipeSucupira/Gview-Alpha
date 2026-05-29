@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext.jsx'
-import './Auth.css'
+import '../pages/Auth.css'
 
 const GviewIcon = () => (
   <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
