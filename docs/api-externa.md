@@ -27,13 +27,15 @@ A RAWG é a maior base de dados pública de jogos, com cobertura de mais de 500 
 
 ---
 
-## Rota stub implementada (Sprint 1)
+## Rota implementada e Ativa (Sprint 2)
 
 ```
-GET /api/rawg/search?q={query}
+POST /api/rawg/import/:rawgId
 ```
 
-Retorna os primeiros resultados da RAWG para o termo buscado. A rota já está funcional e pode ser testada com a chave configurada em `.env` (`RAWG_API_KEY`).
+Esta rota utiliza a chave da API para bater na base global de jogos da RAWG em tempo real, resgatar todos os metadados valiosos (nome, gêneros, plataformas, URL de capa em alta definição, data de lançamento) e converter perfeitamente na entidade `Game` para salvar no banco local do Gview.
+
+A integração foi concluída com sucesso e o fallback de mock foi desativado graças à injeção da `RAWG_API_KEY` oficial no ambiente.
 
 ---
 

@@ -9,6 +9,7 @@ import Login from './pages/Login.jsx'
 import Profile from './pages/Profile.jsx'
 import AdminPanel from './pages/AdminPanel.jsx'
 import GameJamsPage from './pages/GameJamsPage.jsx'
+import CollectionsPage from './pages/Collections.jsx'
 import NotFound from './pages/NotFound.jsx'
 import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
@@ -30,6 +31,7 @@ function App() {
               <Route path="/profile"     element={<Profile />} />
               <Route path="/admin"       element={<AdminPanel />} />
               <Route path="/jams"        element={<GameJamsPage />} />
+              <Route path="/collections" element={<CollectionsPage />} />
               <Route path="*"            element={<NotFound />} />
             </Routes>
           </main>

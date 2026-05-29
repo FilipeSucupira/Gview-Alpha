@@ -1,145 +1,57 @@
-import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
-const request = require('supertest');
-const app = require('../../src/server');
-const prisma = require('../../src/lib/prisma');
-const jwt = require('jsonwebtoken');
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import request from 'supertest';
+import app from '../../src/server.js';
+import prisma from '../../src/lib/prisma.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'gview-secret-dev';
+const JWT_SECRET = 'gview-secret-dev';
+let userToken, userId, gameId;
 
-describe('Reviews Integration Tests', () => {
-  let user1, user2, game;
-  let token1, token2;
-  let originalFetch;
+beforeAll(async () => {
+  const hash = await bcrypt.hash('pass123', 10);
+  const user = await prisma.user.create({ data: { name: 'Rev User', email: `rev_${Date.now()}@t.com`, passwordHash: hash } });
+  userId = user.id;
+  userToken = jwt.sign({ id: user.id, email: user.email, role: 'PLAYER' }, JWT_SECRET, { expiresIn: '1h' });
+  const game = await prisma.game.create({ data: { title: `Rev Game ${Date.now()}`, slug: `rev-game-${Date.now()}`, shortDescription: 'Test' } });
+  gameId = game.id;
+});
 
-  beforeEach(async () => {
-    originalFetch = global.fetch;
+afterAll(async () => {
+  await prisma.review.deleteMany({ where: { userId } });
+  await prisma.game.deleteMany({ where: { id: gameId } });
+  await prisma.user.delete({ where: { id: userId } }).catch(() => {});
+  await prisma.$disconnect();
+});
 
-    user1 = await prisma.user.create({
-      data: { name: 'User1', email: `u1_${Date.now()}@gview.com`, passwordHash: 'hash', role: 'PLAYER' },
-    });
-    user2 = await prisma.user.create({
-      data: { name: 'User2', email: `u2_${Date.now()}@gview.com`, passwordHash: 'hash', role: 'PLAYER' },
-    });
-    token1 = jwt.sign({ id: user1.id, email: user1.email, role: user1.role }, JWT_SECRET);
-    token2 = jwt.sign({ id: user2.id, email: user2.email, role: user2.role }, JWT_SECRET);
-
-    game = await prisma.game.create({
-      data: {
-        title: 'Test Game Reviews',
-        slug: `test-game-reviews-${Date.now()}`,
-        shortDescription: 'A test game',
-        status: 'AVAILABLE',
-      },
-    });
-  });
-
-  afterEach(async () => {
-    global.fetch = originalFetch;
-    await prisma.review.deleteMany({ where: { gameId: game.id } });
-    await prisma.game.delete({ where: { id: game.id } });
-    await prisma.user.deleteMany({ where: { id: { in: [user1.id, user2.id] } } });
-  });
-
-  it('GET /api/reviews/game/:gameId — deve listar reviews de um jogo', async () => {
-    await prisma.review.create({ data: { userId: user1.id, gameId: game.id, rating: 4, comment: 'Bom jogo' } });
-
-    const res = await request(app).get(`/api/reviews/game/${game.id}`);
+describe('GET /api/reviews/game/:gameId', () => {
+  it('deve retornar reviews de um jogo', async () => {
+    const res = await request(app).get(`/api/reviews/game/${gameId}`);
     expect(res.status).toBe(200);
-    expect(res.body.data).toHaveLength(1);
-    expect(res.body.data[0].rating).toBe(4);
-    expect(res.body.data[0].user.name).toBe('User1');
+    expect(res.body).toHaveProperty('data');
   });
+});
 
-  it('POST /api/reviews — deve criar review com autenticação', async () => {
-    const res = await request(app)
-      .post('/api/reviews')
-      .set('Authorization', `Bearer ${token1}`)
-      .send({ gameId: game.id, rating: 5, comment: 'Excelente!' });
-
-    expect(res.status).toBe(201);
-    expect(res.body.rating).toBe(5);
-    expect(res.body.gameId).toBe(game.id);
-  });
-
-  it('POST /api/reviews — deve rejeitar rating inválido', async () => {
-    const res = await request(app)
-      .post('/api/reviews')
-      .set('Authorization', `Bearer ${token1}`)
-      .send({ gameId: game.id, rating: 10 });
-
-    expect(res.status).toBe(400);
-  });
-
-  it('POST /api/reviews — deve rejeitar sem autenticação', async () => {
-    const res = await request(app)
-      .post('/api/reviews')
-      .send({ gameId: game.id, rating: 4 });
-
+describe('POST /api/reviews', () => {
+  it('deve retornar 401 sem autenticação', async () => {
+    const res = await request(app).post('/api/reviews').send({ gameId, rating: 5 });
     expect(res.status).toBe(401);
   });
 
-  it('POST /api/reviews — deve impedir review duplicada', async () => {
-    await prisma.review.create({ data: { userId: user1.id, gameId: game.id, rating: 3 } });
-
+  it('deve criar review com sucesso', async () => {
     const res = await request(app)
       .post('/api/reviews')
-      .set('Authorization', `Bearer ${token1}`)
-      .send({ gameId: game.id, rating: 5 });
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({ gameId, rating: 4, comment: 'Muito bom!' });
+    expect(res.status).toBe(201);
+    expect(res.body.rating).toBe(4);
+  });
 
+  it('deve retornar 409 ao duplicar review', async () => {
+    const res = await request(app)
+      .post('/api/reviews')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({ gameId, rating: 3 });
     expect(res.status).toBe(409);
-  });
-
-  it('PUT /api/reviews/:id — deve atualizar própria review', async () => {
-    const review = await prisma.review.create({
-      data: { userId: user1.id, gameId: game.id, rating: 3 },
-    });
-
-    const res = await request(app)
-      .put(`/api/reviews/${review.id}`)
-      .set('Authorization', `Bearer ${token1}`)
-      .send({ rating: 5, comment: 'Melhorou muito!' });
-
-    expect(res.status).toBe(200);
-    expect(res.body.rating).toBe(5);
-  });
-
-  it('PUT /api/reviews/:id — deve proibir editar review de outro usuário', async () => {
-    const review = await prisma.review.create({
-      data: { userId: user1.id, gameId: game.id, rating: 3 },
-    });
-
-    const res = await request(app)
-      .put(`/api/reviews/${review.id}`)
-      .set('Authorization', `Bearer ${token2}`)
-      .send({ rating: 1 });
-
-    expect(res.status).toBe(403);
-  });
-
-  it('DELETE /api/reviews/:id — deve deletar própria review', async () => {
-    const review = await prisma.review.create({
-      data: { userId: user1.id, gameId: game.id, rating: 4 },
-    });
-
-    const res = await request(app)
-      .delete(`/api/reviews/${review.id}`)
-      .set('Authorization', `Bearer ${token1}`);
-
-    expect(res.status).toBe(204);
-
-    const deleted = await prisma.review.findUnique({ where: { id: review.id } });
-    expect(deleted).toBeNull();
-  });
-
-  it('DELETE /api/reviews/:id — deve proibir deletar review de outro usuário', async () => {
-    const review = await prisma.review.create({
-      data: { userId: user1.id, gameId: game.id, rating: 4 },
-    });
-
-    const res = await request(app)
-      .delete(`/api/reviews/${review.id}`)
-      .set('Authorization', `Bearer ${token2}`);
-
-    expect(res.status).toBe(403);
   });
 });

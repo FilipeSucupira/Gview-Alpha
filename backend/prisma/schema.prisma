@@ -1,16 +1,12 @@
-// Gview — Schema Prisma
-// Banco: PostgreSQL
-
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
-
-// Enums removidos para compatibilidade com SQLite
 
 model User {
   id           String     @id @default(uuid())
@@ -20,11 +16,11 @@ model User {
   role         String     @default("PLAYER")
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
-
   wishlist     Wishlist[]
   reviews      Review[]
   gameJams     GameJam[]
   jamEntries   GameJamEntry[]
+  collections  Collection[]
 }
 
 model Game {
@@ -42,10 +38,10 @@ model Game {
   launchWindow     String?
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
-
   wishlist         Wishlist[]
   reviews          Review[]
   jamEntries       GameJamEntry[]
+  collectionItems  CollectionItem[]
 }
 
 model Wishlist {
@@ -53,10 +49,8 @@ model Wishlist {
   userId    String
   gameId    String
   createdAt DateTime @default(now())
-
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
-
   @@unique([userId, gameId])
 }
 
@@ -68,32 +62,30 @@ model Review {
   comment   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
-
   @@unique([userId, gameId])
 }
 
 model Submission {
-  id                   String           @id @default(uuid())
-  gameTitle            String
-  projectUrl           String?
-  description          String
-  launchPlans          String?
-  targetPlatforms      String?
-  launchDateRange      String?
-  demoLink             String?
-  nextFestParticipation Boolean         @default(false)
-  heardAbout           String?
-  additionalInfo       String?
-  contactRole          String?
-  contactEmail         String
-  studioName           String?
-  attachmentUrl        String?
-  reviewStatus         String           @default("PENDING")
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
+  id                    String    @id @default(uuid())
+  gameTitle             String
+  projectUrl            String?
+  description           String
+  launchPlans           String?
+  targetPlatforms       String?
+  launchDateRange       String?
+  demoLink              String?
+  nextFestParticipation Boolean   @default(false)
+  heardAbout            String?
+  additionalInfo        String?
+  contactRole           String?
+  contactEmail          String
+  studioName            String?
+  attachmentUrl         String?
+  reviewStatus          String    @default("PENDING")
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 }
 
 model GameJam {
@@ -107,7 +99,6 @@ model GameJam {
   creatorId   String
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-
   creator     User           @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   entries     GameJamEntry[]
 }
@@ -118,10 +109,30 @@ model GameJamEntry {
   gameId       String
   developerId  String
   createdAt    DateTime @default(now())
-
   jam          GameJam  @relation(fields: [jamId], references: [id], onDelete: Cascade)
   game         Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
   developer    User     @relation(fields: [developerId], references: [id], onDelete: Cascade)
-
   @@unique([jamId, gameId])
+}
+
+model Collection {
+  id          String           @id @default(uuid())
+  userId      String
+  name        String
+  description String?
+  isPublic    Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       CollectionItem[]
+}
+
+model CollectionItem {
+  id           String     @id @default(uuid())
+  collectionId String
+  gameId       String
+  createdAt    DateTime   @default(now())
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  game         Game       @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  @@unique([collectionId, gameId])
 }

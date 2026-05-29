@@ -1,7 +1,11 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext.jsx'
+import { apiFetch } from '../services/api.js'
 import './SubmitGame.css'
 
 export default function SubmitGame() {
+  const { user } = useAuth()
   const [form, setForm] = useState({
     gameTitle:'', projectUrl:'', description:'', launchPlans:'',
     targetPlatforms:'', launchDateRange:'', demoLink:'',
@@ -16,10 +20,15 @@ export default function SubmitGame() {
   const submit = async e => {
     e.preventDefault()
     setError('')
+
+    if (!user) {
+      setError('Você precisa estar logado para enviar uma submissão.')
+      return
+    }
+
     try {
-      const res = await fetch('/api/submissions', {
+      const res = await apiFetch('/api/submissions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
       })
       if (!res.ok) {
@@ -45,6 +54,28 @@ export default function SubmitGame() {
         <h1>envie seu jogo</h1>
         <p>Está desenvolvendo uma demo incrível? Adoraríamos conhecer! Preencha as informações abaixo e nossa equipe entrará em contato.</p>
       </div>
+      {!user && (
+        <div className="auth-error" style={{
+          marginBottom: '2.5rem',
+          background: 'rgba(244, 98, 42, 0.1)',
+          border: '1px solid var(--color-primary)',
+          color: 'var(--color-primary)',
+          padding: '1.25rem 1.75rem',
+          borderRadius: 'var(--radius-md)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1.5rem',
+          boxShadow: '0 4px 12px rgba(244,98,42,0.08)'
+        }}>
+          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500 }}>
+            ⚠️ <strong>Atenção:</strong> Você precisa estar logado para enviar uma submissão de jogo. Por favor, faça login antes de preencher o formulário.
+          </span>
+          <Link to="/login" className="btn btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: 'var(--text-xs)', borderRadius: '9999px', whiteSpace: 'nowrap' }}>
+            Fazer Login 🔑
+          </Link>
+        </div>
+      )}
       {error && <div className="auth-error" style={{marginBottom: '2rem'}}>{error}</div>}
       <form className="submit-form" onSubmit={submit}>
         <fieldset>

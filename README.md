@@ -72,6 +72,7 @@ npm run dev                 # http://localhost:5173
 | Documento | Arquivo |
 |---|---|
 | Casos de uso (UC01–UC19) | [`docs/casos-de-uso.md`](docs/casos-de-uso.md) |
+| Guia de Testes e QA | [`docs/testes.md`](docs/testes.md) |
 | Modelagem do banco de dados | [`docs/modelagem.md`](docs/modelagem.md) |
 | Integração com API externa (RAWG) | [`docs/api-externa.md`](docs/api-externa.md) |
 | Escopo e planejamento da Sprint 1 | [`SPRINT1.md`](SPRINT1.md) |

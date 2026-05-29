@@ -11,5 +11,18 @@ export default defineConfig({
         changeOrigin: true,
       }
     }
-  }
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './src/tests/setup.js',
+    exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**', '**/cypress/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      include: ['src/**/*.{js,jsx}'],
+      exclude: ['src/main.jsx', 'src/tests/**'],
+    },
+  },
 })
+

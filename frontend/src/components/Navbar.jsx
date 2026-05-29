@@ -25,6 +25,7 @@ export default function Navbar() {
         <nav className="navbar-links">
           <Link to="/" className="nav-link">demos</Link>
           <Link to="/jams" className="nav-link">game jams</Link>
+          {user && <Link to="/collections" className="nav-link">coleções</Link>}
           {isAdmin && <Link to="/admin" className="nav-link nav-link-admin">admin</Link>}
           <Link to="/submit" className="nav-link nav-link-cta">envie seu jogo</Link>
 

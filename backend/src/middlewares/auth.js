@@ -1,13 +1,9 @@
 // Middleware de autenticação JWT para o Gview
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'gview-secret-dev';
-
-/**
- * authMiddleware — verifica o token JWT no header Authorization.
- * Anexa o usuário decodificado (id, email, role) em req.user.
- */
 function authMiddleware(req, res, next) {
+  // Lê o secret em runtime para garantir compatibilidade com testes
+  const JWT_SECRET = process.env.JWT_SECRET || 'gview-secret-dev';
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -25,10 +21,6 @@ function authMiddleware(req, res, next) {
   }
 }
 
-/**
- * adminOnly — middleware que verifica se o usuário autenticado é ADMIN.
- * Deve ser usado APÓS authMiddleware.
- */
 function adminOnly(req, res, next) {
   if (!req.user || req.user.role !== 'ADMIN') {
     return res.status(403).json({ error: 'Acesso restrito a administradores' });

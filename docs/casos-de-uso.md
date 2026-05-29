@@ -1,134 +1,173 @@
-# Casos de Uso — Gview
+# Casos de Uso — Gview Platform
 
-## UC01 — Visualizar demos em destaque
-- **Ator:** visitante.
-- **Pré-condição:** jogos marcados como destaque existem no sistema.
-- **Fluxo principal:** visitante acessa a home; sistema exibe seção de destaques.
-- **Fluxo alternativo:** nenhum jogo em destaque; sistema mostra estado vazio.
-- **Pós-condição:** visitante identifica demos prioritárias.
+## UC-01: Registrar Conta
+**Ator:** Visitante  
+**Pré-condições:** Usuário não autenticado  
+**Fluxo Principal:** Usuário preenche nome, e-mail e senha → sistema valida dados → cria conta → retorna token JWT  
+**Fluxos Alternativos:** E-mail já cadastrado → erro 409 | Campos faltantes → erro 400  
+**Pós-condições:** Conta criada, usuário autenticado  
 
-## UC02 — Visualizar todas as demos
-- **Ator:** visitante.
-- **Pré-condição:** catálogo disponível.
-- **Fluxo principal:** visitante acessa a listagem geral; sistema exibe todas as demos disponíveis.
-- **Fluxo alternativo:** catálogo vazio.
-- **Pós-condição:** usuário consulta o acervo.
+## UC-02: Autenticar (Login)
+**Ator:** Usuário registrado  
+**Pré-condições:** Conta existente  
+**Fluxo Principal:** Usuário informa e-mail e senha → sistema valida credenciais → retorna token JWT  
+**Fluxos Alternativos:** Credenciais inválidas → erro 401  
+**Pós-condições:** Token JWT gerado, sessão iniciada  
 
-## UC03 — Visualizar demos em breve
-- **Ator:** visitante.
-- **Pré-condição:** jogos com status `COMING_SOON` existem.
-- **Fluxo principal:** visitante acessa a seção; sistema lista futuras demos.
-- **Fluxo alternativo:** nenhuma demo futura cadastrada.
-- **Pós-condição:** visitante visualiza próximos lançamentos.
+## UC-03: Atualizar Perfil
+**Ator:** Usuário autenticado  
+**Pré-condições:** Token JWT válido  
+**Fluxo Principal:** Usuário atualiza nome → sistema persiste alteração → retorna dados atualizados  
+**Fluxos Alternativos:** Token inválido → erro 401  
+**Pós-condições:** Perfil atualizado  
 
-## UC04 — Ver detalhes de um jogo
-- **Ator:** visitante.
-- **Pré-condição:** jogo cadastrado.
-- **Fluxo principal:** visitante seleciona um card; sistema abre página de detalhes.
-- **Fluxo alternativo:** jogo indisponível ou removido.
-- **Pós-condição:** visitante lê informações completas.
+## UC-04: Excluir Conta
+**Ator:** Usuário autenticado  
+**Pré-condições:** Token JWT válido  
+**Fluxo Principal:** Usuário confirma exclusão → sistema remove conta e dados relacionados (cascade)  
+**Pós-condições:** Conta e dados do usuário removidos  
 
-## UC05 — Jogar uma demo
-- **Ator:** visitante ou usuário autenticado.
-- **Pré-condição:** jogo possui `demoUrl` válida.
-- **Fluxo principal:** usuário clica em "Jogar"; sistema carrega a página da demo.
-- **Fluxo alternativo:** demo indisponível; sistema informa erro.
-- **Pós-condição:** demo é iniciada.
+## UC-05: Listar Jogos / Catálogo
+**Ator:** Visitante ou Usuário  
+**Pré-condições:** Nenhuma  
+**Fluxo Principal:** Usuário acessa catálogo → sistema retorna lista de jogos (com fallback mock se vazio)  
+**Fluxos Alternativos:** Filtro por status (FEATURED, AVAILABLE, COMING_SOON)  
+**Pós-condições:** Lista de jogos exibida  
 
-## UC06 — Cadastrar conta
-- **Ator:** visitante.
-- **Pré-condição:** e-mail não cadastrado.
-- **Fluxo principal:** visitante preenche formulário; sistema cria conta.
-- **Fluxo alternativo:** e-mail já utilizado ou dados inválidos.
-- **Pós-condição:** conta registrada.
+## UC-06: Ver Detalhes de Jogo
+**Ator:** Visitante ou Usuário  
+**Pré-condições:** Nenhuma  
+**Fluxo Principal:** Usuário acessa página de jogo via slug → sistema retorna dados completos + reviews  
+**Fluxos Alternativos:** Slug inexistente → erro 404  
+**Pós-condições:** Detalhes do jogo exibidos  
 
-## UC07 — Realizar login
-- **Ator:** usuário cadastrado.
-- **Pré-condição:** conta ativa.
-- **Fluxo principal:** usuário informa credenciais; sistema autentica acesso.
-- **Fluxo alternativo:** credenciais inválidas.
-- **Pós-condição:** sessão autenticada.
+## UC-07: Criar Jogo (Admin)
+**Ator:** Administrador  
+**Pré-condições:** Token JWT com role ADMIN  
+**Fluxo Principal:** Admin preenche dados do jogo (título, descrição, capa, gênero) → sistema valida, gera slug → persiste jogo  
+**Fluxos Alternativos:** Título duplicado → erro 409 | Campos obrigatórios ausentes → erro 400  
+**Pós-condições:** Jogo cadastrado no catálogo  
 
-## UC08 — Adicionar jogo à wishlist
-- **Ator:** usuário autenticado.
-- **Pré-condição:** usuário logado; jogo existente.
-- **Fluxo principal:** usuário aciona botão de lista; sistema grava vínculo.
-- **Fluxo alternativo:** item já existe na lista.
-- **Pós-condição:** wishlist atualizada.
+## UC-08: Atualizar Jogo (Admin)
+**Ator:** Administrador  
+**Pré-condições:** Token JWT com role ADMIN, jogo existente  
+**Fluxo Principal:** Admin edita campos do jogo → sistema persiste alterações  
+**Fluxos Alternativos:** Jogo não encontrado → erro 404  
+**Pós-condições:** Jogo atualizado  
 
-## UC09 — Remover jogo da wishlist
-- **Ator:** usuário autenticado.
-- **Pré-condição:** item presente na wishlist.
-- **Fluxo principal:** usuário remove o item; sistema atualiza lista.
-- **Fluxo alternativo:** item não encontrado.
-- **Pós-condição:** wishlist atualizada.
+## UC-09: Remover Jogo (Admin)
+**Ator:** Administrador  
+**Pré-condições:** Token JWT com role ADMIN  
+**Fluxo Principal:** Admin confirma exclusão → sistema remove jogo  
+**Fluxos Alternativos:** Jogo não encontrado → erro 404  
+**Pós-condições:** Jogo removido do catálogo  
 
-## UC10 — Visualizar wishlist
-- **Ator:** usuário autenticado.
-- **Pré-condição:** usuário logado.
-- **Fluxo principal:** sistema exibe lista pessoal do usuário.
-- **Fluxo alternativo:** wishlist vazia.
-- **Pós-condição:** usuário acompanha jogos salvos.
+## UC-10: Submeter Jogo (Formulário Público)
+**Ator:** Desenvolvedor  
+**Pré-condições:** Nenhuma (formulário público)  
+**Fluxo Principal:** Desenvolvedor preenche dados do jogo (título, descrição, e-mail de contato) → sistema cria submissão com status PENDING  
+**Fluxos Alternativos:** Campos obrigatórios ausentes → erro 400  
+**Pós-condições:** Submissão criada com status PENDING  
 
-## UC11 — Avaliar uma demo
-- **Ator:** usuário autenticado.
-- **Pré-condição:** jogo disponível; usuário autenticado.
-- **Fluxo principal:** usuário envia nota e comentário; sistema persiste avaliação.
-- **Fluxo alternativo:** dados inválidos ou avaliação duplicada.
-- **Pós-condição:** avaliação registrada.
+## UC-11: Revisar Submissão (Admin)
+**Ator:** Administrador  
+**Pré-condições:** Token JWT com role ADMIN  
+**Fluxo Principal:** Admin lista submissões → aprova ou rejeita → sistema atualiza reviewStatus  
+**Fluxos Alternativos:** Submissão não encontrada → erro 404 | Status inválido → erro 400  
+**Pós-condições:** Status da submissão atualizado  
 
-## UC12 — Enviar submissão de jogo
-- **Ator:** desenvolvedor.
-- **Pré-condição:** formulário acessível.
-- **Fluxo principal:** desenvolvedor preenche dados e envia submissão.
-- **Fluxo alternativo:** campos obrigatórios ausentes.
-- **Pós-condição:** submissão registrada como pendente.
+## UC-12: Editar/Excluir Submissão (Admin)
+**Ator:** Administrador  
+**Pré-condições:** Token JWT com role ADMIN  
+**Fluxo Principal:** Admin edita dados ou exclui submissão  
+**Pós-condições:** Submissão atualizada ou removida  
 
-## UC13 — Consultar submissões recebidas
-- **Ator:** administrador.
-- **Pré-condição:** admin autenticado.
-- **Fluxo principal:** admin acessa painel e lista submissões.
-- **Fluxo alternativo:** sem submissões cadastradas.
-- **Pós-condição:** admin visualiza fila de análise.
+## UC-13: Avaliar Jogo (Review)
+**Ator:** Usuário autenticado  
+**Pré-condições:** Token JWT válido, jogo existente  
+**Fluxo Principal:** Usuário atribui nota (1–5) e comentário → sistema persiste review  
+**Fluxos Alternativos:** Nota inválida → erro 400 | Review duplicada → erro 409  
+**Pós-condições:** Review criada e visível na página do jogo  
 
-## UC14 — Aprovar ou rejeitar submissão
-- **Ator:** administrador.
-- **Pré-condição:** submissão existente e pendente.
-- **Fluxo principal:** admin revisa e altera status.
-- **Fluxo alternativo:** submissão já tratada.
-- **Pós-condição:** estado final atualizado.
+## UC-14: Editar Review Própria
+**Ator:** Usuário autenticado  
+**Pré-condições:** Token JWT válido, review pertence ao usuário  
+**Fluxo Principal:** Usuário edita nota/comentário → sistema persiste  
+**Fluxos Alternativos:** Review de outro usuário → erro 403  
+**Pós-condições:** Review atualizada  
 
-## UC15 — Editar dados de um jogo cadastrado
-- **Ator:** administrador.
-- **Pré-condição:** jogo existente.
-- **Fluxo principal:** admin altera dados; sistema salva edição.
-- **Fluxo alternativo:** dados inválidos.
-- **Pós-condição:** jogo atualizado no catálogo.
+## UC-15: Excluir Review Própria
+**Ator:** Usuário autenticado  
+**Pré-condições:** Token JWT válido, review pertence ao usuário  
+**Fluxo Principal:** Usuário solicita exclusão → sistema remove review  
+**Fluxos Alternativos:** Review de outro usuário → erro 403  
+**Pós-condições:** Review removida  
 
-## UC16 — Criar uma Game Jam
-- **Ator:** administrador / desenvolvedor.
-- **Pré-condição:** usuário autenticado com permissão.
-- **Fluxo principal:** usuário acessa painel, preenche formulário de Game Jam e envia.
-- **Fluxo alternativo:** datas conflitantes ou dados inválidos.
-- **Pós-condição:** Game Jam registrada no sistema.
+## UC-16: Adicionar à Lista de Desejos
+**Ator:** Usuário autenticado  
+**Pré-condições:** Token JWT válido  
+**Fluxo Principal:** Usuário adiciona jogo à wishlist → sistema persiste entrada  
+**Fluxos Alternativos:** Jogo já na wishlist → erro 409  
+**Pós-condições:** Jogo adicionado à wishlist  
 
-## UC17 — Listar Game Jams
-- **Ator:** visitante.
-- **Pré-condição:** catálogo de Game Jams disponível.
-- **Fluxo principal:** visitante acessa página de Jams e visualiza as ativas e futuras.
-- **Fluxo alternativo:** Nenhuma Jam ativa.
-- **Pós-condição:** visitante vê as Jams.
+## UC-17: Remover da Lista de Desejos
+**Ator:** Usuário autenticado  
+**Pré-condições:** Token JWT válido, jogo na wishlist  
+**Fluxo Principal:** Usuário remove jogo → sistema deleta entrada  
+**Fluxos Alternativos:** Jogo não na wishlist → erro 404  
+**Pós-condições:** Jogo removido da wishlist  
 
-## UC18 — Participar de uma Game Jam
-- **Ator:** desenvolvedor.
-- **Pré-condição:** usuário logado, Game Jam ativa.
-- **Fluxo principal:** desenvolvedor vincula seu jogo à Jam.
-- **Fluxo alternativo:** jogo já vinculado ou Jam finalizada.
-- **Pós-condição:** participação registrada.
+## UC-18: Criar Game Jam (Admin)
+**Ator:** Administrador  
+**Pré-condições:** Token JWT com role ADMIN  
+**Fluxo Principal:** Admin preenche dados (título, descrição, tema, datas) → sistema cria Game Jam  
+**Fluxos Alternativos:** Campos obrigatórios ausentes → erro 400  
+**Pós-condições:** Game Jam criada  
 
-## UC19 — Importar Jogo da API RAWG
-- **Ator:** administrador.
-- **Pré-condição:** permissão administrativa.
-- **Fluxo principal:** admin informa ID RAWG, sistema busca dados externos e salva como Jogo local.
-- **Fluxo alternativo:** ID não encontrado ou erro de API.
-- **Pós-condição:** jogo novo persistido no banco de dados.
+## UC-19: Editar Game Jam (Admin)
+**Ator:** Administrador  
+**Pré-condições:** Token JWT com role ADMIN, jam existente  
+**Fluxo Principal:** Admin edita dados da jam → sistema persiste  
+**Fluxos Alternativos:** Jam não encontrada → erro 404  
+**Pós-condições:** Game Jam atualizada  
+
+## UC-20: Excluir Game Jam (Admin)
+**Ator:** Administrador  
+**Pré-condições:** Token JWT com role ADMIN  
+**Fluxo Principal:** Admin confirma exclusão → sistema remove jam e entradas associadas (cascade)  
+**Pós-condições:** Jam removida  
+
+## UC-21: Inscrever Jogo em Game Jam
+**Ator:** Usuário autenticado  
+**Pré-condições:** Token JWT válido, jam ativa, jogo existente  
+**Fluxo Principal:** Usuário seleciona jam e jogo → sistema cria GameJamEntry  
+**Fluxos Alternativos:** Jogo já inscrito → erro 409  
+**Pós-condições:** Inscrição registrada  
+
+## UC-22: Criar Coleção Personalizada
+**Ator:** Usuário autenticado  
+**Pré-condições:** Token JWT válido  
+**Fluxo Principal:** Usuário define nome, descrição e visibilidade → sistema cria coleção  
+**Fluxos Alternativos:** Nome ausente → erro 400  
+**Pós-condições:** Coleção criada  
+
+## UC-23: Editar Coleção
+**Ator:** Usuário autenticado  
+**Pré-condições:** Token JWT válido, coleção pertence ao usuário  
+**Fluxo Principal:** Usuário edita nome/descrição/visibilidade → sistema persiste  
+**Fluxos Alternativos:** Coleção de outro usuário → erro 403  
+**Pós-condições:** Coleção atualizada  
+
+## UC-24: Excluir Coleção
+**Ator:** Usuário autenticado  
+**Pré-condições:** Token JWT válido, coleção pertence ao usuário  
+**Fluxo Principal:** Usuário confirma exclusão → sistema remove coleção e itens (cascade)  
+**Fluxos Alternativos:** Coleção de outro usuário → erro 403  
+**Pós-condições:** Coleção removida  
+
+## UC-25: Adicionar/Remover Jogo de Coleção
+**Ator:** Usuário autenticado  
+**Pré-condições:** Token JWT válido, coleção pertence ao usuário  
+**Fluxo Principal:** Usuário adiciona ou remove jogo → sistema persiste CollectionItem  
+**Fluxos Alternativos:** Jogo já na coleção → erro 409 | Jogo não encontrado → erro 404  
+**Pós-condições:** Item adicionado ou removido  
