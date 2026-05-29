@@ -4,10 +4,7 @@ const AuthContext = createContext(null)
 
 const API = import.meta.env.VITE_API_URL || ''
 
-const sanitizeToken = (token) => {
-  if (typeof token !== 'string') return ''
-  return token.replace(/[^a-zA-Z0-9-_.\/+=]/g, '')
-}
+const TOKEN_PATTERN = /^[A-Za-z0-9\-_.\/+=]+$/
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
@@ -36,10 +33,12 @@ export function AuthProvider({ children }) {
     })
     const data = await res.json()
     if (!res.ok) throw new Error(data.error || 'Erro ao fazer login')
-    
-    const safeToken = sanitizeToken(data.token)
-    localStorage.setItem('gview_token', safeToken)
-    setToken(safeToken)
+    const receivedToken = String(data.token)
+    if (!TOKEN_PATTERN.test(receivedToken)) {
+      throw new Error('Token inválido recebido do servidor')
+    }
+    localStorage.setItem('gview_token', receivedToken)
+    setToken(receivedToken)
     setUser(data.user)
     return data.user
   }
@@ -52,10 +51,12 @@ export function AuthProvider({ children }) {
     })
     const data = await res.json()
     if (!res.ok) throw new Error(data.error || 'Erro ao cadastrar')
-    
-    const safeToken = sanitizeToken(data.token)
-    localStorage.setItem('gview_token', safeToken)
-    setToken(safeToken)
+    const receivedToken = String(data.token)
+    if (!TOKEN_PATTERN.test(receivedToken)) {
+      throw new Error('Token inválido recebido do servidor')
+    }
+    localStorage.setItem('gview_token', receivedToken)
+    setToken(receivedToken)
     setUser(data.user)
     return data.user
   }

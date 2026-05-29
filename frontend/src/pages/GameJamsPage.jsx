@@ -37,15 +37,18 @@ export default function GameJamsPage() {
   const handleJoin = async () => {
     if (!selectedGameId) return setJoinMsg('Selecione um jogo.')
     try {
-      const safeJamId = encodeURIComponent(selectedJam.id)
-      const r = await apiFetch(`/api/gamejams/${safeJamId}/join`, {
+      const jamId = String(selectedJam.id)
+      if (!/^[a-zA-Z0-9_-]+$/.test(jamId)) {
+        return setJoinMsg('❌ ID da Game Jam inválido.')
+      }
+      const r = await apiFetch(`/api/gamejams/${jamId}/join`, {
         method: 'POST',
         body: JSON.stringify({ gameId: selectedGameId })
       })
       if (r.ok) {
         setJoinMsg('✅ Inscrição realizada com sucesso!')
         // Refresh jam details
-        const jr = await fetch(`/api/gamejams/${safeJamId}`)
+        const jr = await fetch(`/api/gamejams/${jamId}`)
         const jj = await jr.json()
         setSelectedJam(jj)
         setGameJams(prev => prev.map(j => j.id === jj.id ? { ...j, entries: jj.entries } : j))

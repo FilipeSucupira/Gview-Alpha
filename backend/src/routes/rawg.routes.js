@@ -44,8 +44,12 @@ router.get('/game/:rawgId', async (req, res) => {
   if (!RAWG_KEY) {
     return res.status(503).json({ error: 'RAWG_API_KEY não configurada no .env' });
   }
+  const rawgId = String(req.params.rawgId);
+  if (!/^\d+$/.test(rawgId)) {
+    return res.status(400).json({ error: 'rawgId inválido: deve ser numérico' });
+  }
   try {
-    const url = `${RAWG_BASE}/games/${req.params.rawgId}?key=${RAWG_KEY}`;
+    const url = `${RAWG_BASE}/games/${rawgId}?key=${RAWG_KEY}`;
     const response = await fetch(url);
     if (!response.ok) {
       return res.status(response.status).json({ error: 'Jogo não encontrado na RAWG' });
@@ -70,7 +74,10 @@ router.get('/game/:rawgId', async (req, res) => {
 // POST /api/rawg/import/:rawgId
 // Puxa os dados da RAWG e salva no banco de dados local. Requer autenticação de ADMIN.
 router.post('/import/:rawgId', authMiddleware, adminOnly, async (req, res) => {
-  const { rawgId } = req.params;
+  const rawgId = String(req.params.rawgId);
+  if (!/^\d+$/.test(rawgId)) {
+    return res.status(400).json({ error: 'rawgId inválido: deve ser numérico' });
+  }
   
   try {
     let gameData = {};
