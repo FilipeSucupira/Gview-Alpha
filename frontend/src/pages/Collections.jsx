@@ -54,7 +54,7 @@ export default function CollectionsPage() {
 
   const openEdit = (col) => {
     setEditTarget(col)
-    setForm({ name: col.name, description: col.description || '', isPublic: col.isPublic })
+    setForm({ name: col.name, description: col.description || '', isPublic: false })
     setShowModal(true)
   }
 
@@ -145,7 +145,6 @@ export default function CollectionsPage() {
             <div className="collection-card" key={col.id}>
               <div className="collection-card-header">
                 <h2 className="collection-name">{col.name}</h2>
-                {col.isPublic && <span className="collection-badge">Pública</span>}
               </div>
               <p className="collection-desc">{col.description || 'Sem descrição.'}</p>
 
@@ -182,12 +181,6 @@ export default function CollectionsPage() {
               <div className="form-group">
                 <label className="form-label">Descrição</label>
                 <textarea className="form-textarea" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Descreva sua coleção..." />
-              </div>
-              <div className="form-group">
-                <label className="form-check">
-                  <input type="checkbox" checked={form.isPublic} onChange={e => setForm(f => ({ ...f, isPublic: e.target.checked }))} />
-                  Tornar coleção pública
-                </label>
               </div>
               <div className="modal-actions">
                 <button type="button" className="btn-sm btn-secondary" onClick={() => setShowModal(false)}>Cancelar</button>

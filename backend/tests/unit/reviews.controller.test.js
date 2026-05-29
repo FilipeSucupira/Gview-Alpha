@@ -18,7 +18,7 @@ vi.mock('../../src/lib/prisma.js', () => {
 });
 
 import prisma from '../../src/lib/prisma.js';
-import { getReviewsByGame, createReview, updateReview, deleteReview } from '../../src/controllers/reviews.controller.js';
+import { getReviewsByGame, createReview, updateReview, deleteReview, getReviewsByUser } from '../../src/controllers/reviews.controller.js';
 
 function makeMockRes() {
   const res = {
@@ -124,5 +124,27 @@ describe('deleteReview', () => {
     const res = makeMockRes();
     await deleteReview(req, res);
     expect(res._status).toBe(204);
+  });
+});
+
+describe('getReviewsByUser', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('deve retornar 400 se userId nao for informado', async () => {
+    const req = { params: {}, user: null };
+    const res = makeMockRes();
+    await getReviewsByUser(req, res);
+    expect(res._status).toBe(400);
+    expect(res._body.error).toBe('userId é obrigatório');
+  });
+
+  it('deve retornar as avaliacoes de um usuario com sucesso', async () => {
+    const reviews = [{ id: 'r1', rating: 4, comment: 'Divertido!', game: { title: 'Game 1' } }];
+    prisma.review.findMany.mockResolvedValue(reviews);
+    const req = { params: { userId: 'user-1' } };
+    const res = makeMockRes();
+    await getReviewsByUser(req, res);
+    expect(res._body.data).toEqual(reviews);
+    expect(res._body.total).toBe(1);
   });
 });

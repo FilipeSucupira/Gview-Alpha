@@ -42,7 +42,7 @@ describe('listGameJams', () => {
     const req = {};
     const res = makeMockRes();
     await listGameJams(req, res);
-    expect(res._body).toEqual(jams);
+    expect(res._body).toEqual([{ id: 'j1', title: 'Jam 1', status: 'ACTIVE' }]);
   });
 });
 
@@ -100,11 +100,63 @@ describe('joinGameJam', () => {
     expect(res._status).toBe(400);
   });
 
-  it('deve retornar 409 se já inscrito', async () => {
+  it('deve retornar 404 se game jam nao existir', async () => {
+    prisma.gameJam.findUnique.mockResolvedValue(null);
+    const req = { params: { id: 'j1' }, body: { gameId: 'g1' }, user: { id: 'u1' } };
+    const res = makeMockRes();
+    await joinGameJam(req, res);
+    expect(res._status).toBe(404);
+    expect(res._body.error).toBe('Game Jam não encontrada.');
+  });
+
+  it('deve retornar 400 se a game jam ainda nao comecou', async () => {
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    prisma.gameJam.findUnique.mockResolvedValue({ id: 'j1', startDate: tomorrow, endDate: nextWeek });
+
+    const req = { params: { id: 'j1' }, body: { gameId: 'g1' }, user: { id: 'u1' } };
+    const res = makeMockRes();
+    await joinGameJam(req, res);
+    expect(res._status).toBe(400);
+    expect(res._body.error).toBe('A Game Jam ainda não começou.');
+  });
+
+  it('deve retornar 400 se a game jam ja terminou', async () => {
+    const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    prisma.gameJam.findUnique.mockResolvedValue({ id: 'j1', startDate: lastWeek, endDate: yesterday });
+
+    const req = { params: { id: 'j1' }, body: { gameId: 'g1' }, user: { id: 'u1' } };
+    const res = makeMockRes();
+    await joinGameJam(req, res);
+    expect(res._status).toBe(400);
+    expect(res._body.error).toBe('A Game Jam já terminou.');
+  });
+
+  it('deve retornar 409 se ja inscrito', async () => {
+    const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    prisma.gameJam.findUnique.mockResolvedValue({ id: 'j1', startDate: lastWeek, endDate: nextWeek });
     prisma.gameJamEntry.create.mockRejectedValue({ code: 'P2002' });
+
     const req = { params: { id: 'j1' }, body: { gameId: 'g1' }, user: { id: 'u1' } };
     const res = makeMockRes();
     await joinGameJam(req, res);
     expect(res._status).toBe(409);
+  });
+
+  it('deve se inscrever na game jam com sucesso no prazo correto', async () => {
+    const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const entry = { id: 'e1', jamId: 'j1', gameId: 'g1', developerId: 'u1' };
+
+    prisma.gameJam.findUnique.mockResolvedValue({ id: 'j1', startDate: lastWeek, endDate: nextWeek });
+    prisma.gameJamEntry.create.mockResolvedValue(entry);
+
+    const req = { params: { id: 'j1' }, body: { gameId: 'g1' }, user: { id: 'u1' } };
+    const res = makeMockRes();
+    await joinGameJam(req, res);
+    expect(res._status).toBe(201);
+    expect(res._body).toEqual(entry);
   });
 });

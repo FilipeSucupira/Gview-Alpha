@@ -17,11 +17,28 @@ function AuthConsumer() {
   )
 }
 
+import { useEffect } from 'react'
+
+function AuthActionsHelper({ action, email, password, name, onError, onSuccess }) {
+  const { login, register } = useAuth()
+  useEffect(() => {
+    if (action === 'login') {
+      login(email, password).then(onSuccess).catch(onError)
+    } else if (action === 'register') {
+      register(name, email, password).then(onSuccess).catch(onError)
+    }
+  }, [action])
+  return null
+}
+
 describe('AuthContext', () => {
   beforeEach(() => {
     localStorage.clear()
     vi.clearAllMocks()
-    vi.stubGlobal('fetch', vi.fn())
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      json: async () => ({})
+    }))
   })
 
   afterEach(() => {
@@ -110,6 +127,98 @@ describe('AuthContext', () => {
     await waitFor(() => {
       expect(screen.getByTestId('user').textContent).toBe('null')
       expect(screen.getByTestId('token').textContent).toBe('null')
+    })
+  })
+
+  it('CT-F26 — deve efetuar login com sucesso e salvar token', async () => {
+    const fakeUser = { id: 1, email: 'test@gview.com', role: 'PLAYER' }
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ token: 'fake-jwt', user: fakeUser })
+    })
+
+    const onSuccess = vi.fn()
+    const onError = vi.fn()
+
+    render(
+      <AuthProvider>
+        <AuthConsumer />
+        <AuthActionsHelper action="login" email="test@gview.com" password="password123" onSuccess={onSuccess} onError={onError} />
+      </AuthProvider>
+    )
+
+    await waitFor(() => {
+      expect(onSuccess).toHaveBeenCalledWith(fakeUser)
+      expect(localStorage.getItem('gview_token')).toBe('fake-jwt')
+      expect(screen.getByTestId('user').textContent).toBe('test@gview.com')
+    })
+  })
+
+  it('CT-F27 — deve lançar erro se login falhar', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: 'Credenciais inválidas' })
+    })
+
+    const onSuccess = vi.fn()
+    const onError = vi.fn()
+
+    render(
+      <AuthProvider>
+        <AuthConsumer />
+        <AuthActionsHelper action="login" email="test@gview.com" password="password123" onSuccess={onSuccess} onError={onError} />
+      </AuthProvider>
+    )
+
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(expect.any(Error))
+      expect(onError.mock.calls[0][0].message).toBe('Credenciais inválidas')
+    })
+  })
+
+  it('CT-F28 — deve registrar com sucesso e salvar token', async () => {
+    const fakeUser = { id: 2, name: 'New User', email: 'new@gview.com', role: 'PLAYER' }
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ token: 'new-jwt', user: fakeUser })
+    })
+
+    const onSuccess = vi.fn()
+    const onError = vi.fn()
+
+    render(
+      <AuthProvider>
+        <AuthConsumer />
+        <AuthActionsHelper action="register" name="New User" email="new@gview.com" password="password123" onSuccess={onSuccess} onError={onError} />
+      </AuthProvider>
+    )
+
+    await waitFor(() => {
+      expect(onSuccess).toHaveBeenCalledWith(fakeUser)
+      expect(localStorage.getItem('gview_token')).toBe('new-jwt')
+      expect(screen.getByTestId('user').textContent).toBe('new@gview.com')
+    })
+  })
+
+  it('CT-F29 — deve lançar erro se registro falhar', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: 'E-mail já cadastrado' })
+    })
+
+    const onSuccess = vi.fn()
+    const onError = vi.fn()
+
+    render(
+      <AuthProvider>
+        <AuthConsumer />
+        <AuthActionsHelper action="register" name="New User" email="new@gview.com" password="password123" onSuccess={onSuccess} onError={onError} />
+      </AuthProvider>
+    )
+
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(expect.any(Error))
+      expect(onError.mock.calls[0][0].message).toBe('E-mail já cadastrado')
     })
   })
 })

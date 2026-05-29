@@ -9,7 +9,21 @@ async function listGameJams(req, res) {
       },
       orderBy: { createdAt: 'desc' },
     });
-    res.json(gameJams);
+
+    const calculatedJams = gameJams.map(jam => {
+      const now = new Date();
+      let status = jam.status;
+      if (now < new Date(jam.startDate)) {
+        status = 'UPCOMING';
+      } else if (now > new Date(jam.endDate)) {
+        status = 'FINISHED';
+      } else {
+        status = 'ACTIVE';
+      }
+      return { ...jam, status };
+    });
+
+    res.json(calculatedJams);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar Game Jams.' });
   }
@@ -25,7 +39,18 @@ async function getGameJam(req, res) {
       },
     });
     if (!gameJam) return res.status(404).json({ error: 'Game Jam não encontrada.' });
-    res.json(gameJam);
+
+    const now = new Date();
+    let status = gameJam.status;
+    if (now < new Date(gameJam.startDate)) {
+      status = 'UPCOMING';
+    } else if (now > new Date(gameJam.endDate)) {
+      status = 'FINISHED';
+    } else {
+      status = 'ACTIVE';
+    }
+
+    res.json({ ...gameJam, status });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar Game Jam.' });
   }
@@ -82,6 +107,22 @@ async function joinGameJam(req, res) {
   const jamId = req.params.id;
   if (!gameId) return res.status(400).json({ error: 'gameId é obrigatório.' });
   try {
+    const jam = await prisma.gameJam.findUnique({
+      where: { id: jamId },
+    });
+    if (!jam) return res.status(404).json({ error: 'Game Jam não encontrada.' });
+
+    const now = new Date();
+    const start = new Date(jam.startDate);
+    const end = new Date(jam.endDate);
+
+    if (now < start) {
+      return res.status(400).json({ error: 'A Game Jam ainda não começou.' });
+    }
+    if (now > end) {
+      return res.status(400).json({ error: 'A Game Jam já terminou.' });
+    }
+
     const entry = await prisma.gameJamEntry.create({
       data: { jamId, gameId, developerId: req.user.id },
     });

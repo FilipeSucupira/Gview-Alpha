@@ -10,6 +10,7 @@ export default function Profile() {
   const [tab, setTab] = useState('wishlist')
   const [wishlist, setWishlist] = useState([])
   const [collections, setCollections] = useState([])
+  const [reviews, setReviews] = useState([])
   const [loadingData, setLoadingData] = useState(false)
 
   useEffect(() => {
@@ -31,6 +32,13 @@ export default function Profile() {
         .then(r => r.json())
         .then(data => setCollections(data.data || []))
         .catch(() => setCollections([]))
+        .finally(() => setLoadingData(false))
+    } else if (tab === 'activity') {
+      setLoadingData(true)
+      apiFetch(`/api/reviews/user/${user.id}`)
+        .then(r => r.json())
+        .then(data => setReviews(data.data || []))
+        .catch(() => setReviews([]))
         .finally(() => setLoadingData(false))
     } else {
       setLoadingData(false)
@@ -123,17 +131,17 @@ export default function Profile() {
               ) : (
                 <div className="wishlist-grid">
                   {collections.map(col => (
-                    <div key={col.id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '1.25rem' }}>
-                      <h3 style={{ margin: '0 0 0.5rem', fontWeight: 700 }}>{col.name}</h3>
-                      {col.description && <p style={{ color: '#6b7280', fontSize: '0.85rem', margin: '0 0 0.75rem' }}>{col.description}</p>}
+                    <div key={col.id} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)', borderRadius: 12, padding: '1.25rem' }}>
+                      <h3 style={{ margin: '0 0 0.5rem', fontWeight: 700, color: 'var(--color-text)' }}>{col.name}</h3>
+                      {col.description && <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', margin: '0 0 0.75rem' }}>{col.description}</p>}
                       <div style={{ display: 'flex', gap: '4px', marginBottom: '0.75rem' }}>
                         {(col.items || []).slice(0, 4).map(item => (
                           <img key={item.id} src={item.game?.coverUrl || `https://picsum.photos/seed/${item.gameId}/40/56`}
-                            alt="" style={{ width: 36, height: 50, borderRadius: 4, objectFit: 'cover', background: '#f3f4f6' }} />
+                            alt="" style={{ width: 36, height: 50, borderRadius: 4, objectFit: 'cover', background: 'var(--color-surface-2)' }} />
                         ))}
                       </div>
-                      <p style={{ fontSize: '0.8rem', color: '#9ca3af', margin: 0 }}>
-                        {(col.items || []).length} jogo(s) · {col.isPublic ? '🌍 Pública' : '🔒 Privada'}
+                      <p style={{ fontSize: '0.8rem', color: 'var(--color-text-faint)', margin: 0 }}>
+                        {(col.items || []).length} jogo(s)
                       </p>
                     </div>
                   ))}
@@ -144,11 +152,59 @@ export default function Profile() {
 
           {/* Activity */}
           {!loadingData && tab === 'activity' && (
-            <div className="profile-empty-state">
-              <span className="empty-icon">📊</span>
-              <h3>Histórico de atividades</h3>
-              <p>Suas avaliações e interações aparecerão aqui.</p>
-            </div>
+            <>
+              {reviews.length === 0 ? (
+                <div className="profile-empty-state">
+                  <span className="empty-icon">📊</span>
+                  <h3>Nenhuma atividade recente</h3>
+                  <p>Você ainda não avaliou nenhum jogo. Suas avaliações aparecerão aqui!</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {reviews.map(rev => (
+                    <div key={rev.id} style={{
+                      background: 'var(--color-surface)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: '12px',
+                      padding: '1.5rem',
+                      display: 'flex',
+                      gap: '1.25rem',
+                      alignItems: 'flex-start'
+                    }}>
+                      <Link to={`/game/${rev.game?.slug}`} style={{ flexShrink: 0 }}>
+                        <img 
+                          src={rev.game?.coverUrl || `https://picsum.photos/seed/${rev.gameId}/80/110`} 
+                          alt="" 
+                          style={{ width: '60px', height: '80px', borderRadius: '6px', objectFit: 'cover', background: 'var(--color-surface-2)' }} 
+                        />
+                      </Link>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                          <Link to={`/game/${rev.game?.slug}`} style={{ textDecoration: 'none', color: 'var(--color-text)', fontWeight: 700, fontSize: '1rem' }}>
+                            {rev.game?.title || 'Jogo'}
+                          </Link>
+                          <span style={{ color: 'var(--color-text-faint)', fontSize: '0.8rem' }}>
+                            {new Date(rev.createdAt).toLocaleDateString('pt-BR')}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '2px', marginBottom: '0.6rem' }}>
+                          {[1, 2, 3, 4, 5].map(star => (
+                            <span key={star} style={{ color: star <= rev.rating ? 'var(--color-accent)' : 'var(--color-text-faint)', fontSize: '0.9rem' }}>
+                              ★
+                            </span>
+                          ))}
+                        </div>
+                        {rev.comment && (
+                          <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                            "{rev.comment}"
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
           {/* Settings */}

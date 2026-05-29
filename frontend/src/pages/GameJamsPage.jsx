@@ -125,12 +125,12 @@ export default function GameJamsPage() {
                     <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>
                       {jam.entries?.length || 0} inscrição(ões)
                     </span>
-                    {jam.status !== 'FINISHED' && user && (
+                    {jam.status === 'ACTIVE' && user && (
                       <button className="btn btn-primary jam-participate-btn" onClick={() => handleParticipate(jam)}>
                         Participar
                       </button>
                     )}
-                    {!user && jam.status !== 'FINISHED' && (
+                    {!user && jam.status === 'ACTIVE' && (
                       <span className="jam-login-hint">Faça login para participar</span>
                     )}
                   </div>

@@ -37,11 +37,11 @@ async function getCollection(req, res) {
 }
 
 async function createCollection(req, res) {
-  const { name, description, isPublic } = req.body;
+  const { name, description } = req.body;
   if (!name) return res.status(400).json({ error: 'Nome da coleção é obrigatório.' });
   try {
     const collection = await prisma.collection.create({
-      data: { userId: req.user.id, name, description: description || null, isPublic: isPublic || false },
+      data: { userId: req.user.id, name, description: description || null, isPublic: false },
     });
     res.status(201).json(collection);
   } catch (err) {
@@ -50,7 +50,7 @@ async function createCollection(req, res) {
 }
 
 async function updateCollection(req, res) {
-  const { name, description, isPublic } = req.body;
+  const { name, description } = req.body;
   try {
     const existing = await prisma.collection.findUnique({ where: { id: req.params.id } });
     if (!existing) return res.status(404).json({ error: 'Coleção não encontrada.' });
@@ -60,7 +60,7 @@ async function updateCollection(req, res) {
       data: {
         ...(name && { name }),
         ...(description !== undefined && { description }),
-        ...(isPublic !== undefined && { isPublic }),
+        isPublic: false,
       },
     });
     res.json(collection);

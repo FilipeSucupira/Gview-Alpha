@@ -10,6 +10,7 @@ const reviewsRouter = require('./routes/reviews.routes');
 const rawgRouter = require('./routes/rawg.routes');
 const gameJamsRouter = require('./routes/gameJams.routes');
 const collectionsRouter = require('./routes/collections.routes');
+const usersRouter = require('./routes/users.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -25,6 +26,7 @@ app.use('/api/reviews', reviewsRouter);
 app.use('/api/rawg', rawgRouter);
 app.use('/api/gamejams', gameJamsRouter);
 app.use('/api/collections', collectionsRouter);
+app.use('/api/users', usersRouter);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', platform: 'Gview API', version: '2.0.0' });

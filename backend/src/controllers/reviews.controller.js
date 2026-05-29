@@ -70,4 +70,19 @@ async function deleteReview(req, res) {
   }
 }
 
-module.exports = { getReviewsByGame, createReview, updateReview, deleteReview };
+async function getReviewsByUser(req, res) {
+  try {
+    const userId = req.params.userId || req.user?.id;
+    if (!userId) return res.status(400).json({ error: 'userId é obrigatório' });
+    const reviews = await prisma.review.findMany({
+      where: { userId },
+      include: { game: { select: { id: true, title: true, coverUrl: true, slug: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({ data: reviews, total: reviews.length });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro interno ao buscar reviews do usuário' });
+  }
+}
+
+module.exports = { getReviewsByGame, createReview, updateReview, deleteReview, getReviewsByUser };

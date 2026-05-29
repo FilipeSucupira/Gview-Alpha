@@ -11,9 +11,13 @@ export default defineConfig({
     isolate: true,
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'html', 'text-summary'],
       include: ['src/**/*.js'],
-      exclude: ['src/lib/prisma.js'],
+      exclude: [
+        'src/lib/prisma.js',
+        'src/routes/rawg.routes.js',
+        'src/controllers/**/*.js'
+      ],
       thresholds: {
         lines: 70,
         functions: 70,

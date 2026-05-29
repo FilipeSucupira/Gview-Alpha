@@ -14,6 +14,7 @@ export default function AdminPanel() {
   const [submissions, setSubmissions] = useState([])
   const [games, setGames] = useState([])
   const [gameJams, setGameJams] = useState([])
+  const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [rawgId, setRawgId] = useState('')
@@ -53,9 +54,32 @@ export default function AdminPanel() {
         const r = await fetch('/api/gamejams')
         const json = await r.json()
         setGameJams(Array.isArray(json) ? json : [])
+      } else if (tab === 'users') {
+        const r = await apiFetch('/api/users')
+        const json = await r.json()
+        setUsers(Array.isArray(json) ? json : [])
       }
     } catch { setError('Erro ao carregar dados.') }
     setLoading(false)
+  }
+
+  // ── USERS / ACCOUNTS ─────────────────────────────────
+  const handleUpdateRole = async (id, role) => {
+    try {
+      const res = await apiFetch(`/api/users/${id}/role`, {
+        method: 'PATCH',
+        body: JSON.stringify({ role })
+      })
+      if (res.ok) {
+        const updated = await res.json()
+        setUsers(prev => prev.map(u => u.id === id ? updated : u))
+      } else {
+        const err = await res.json()
+        alert(err.error || 'Erro ao atualizar cargo.')
+      }
+    } catch {
+      alert('Erro de conexão.')
+    }
   }
 
   // ── SUBMISSIONS ──────────────────────────────────────
@@ -182,6 +206,7 @@ export default function AdminPanel() {
           </button>
           <button className={`admin-tab ${tab === 'games' ? 'active' : ''}`} onClick={() => setTab('games')}>Jogos</button>
           <button className={`admin-tab ${tab === 'gamejams' ? 'active' : ''}`} onClick={() => setTab('gamejams')}>Game Jams</button>
+          <button className={`admin-tab ${tab === 'users' ? 'active' : ''}`} onClick={() => setTab('users')}>Contas</button>
         </div>
       </div>
 
@@ -316,14 +341,6 @@ export default function AdminPanel() {
                 <div className="auth-field"><label>Tema</label><input value={jamForm.theme} onChange={e => setJamForm({...jamForm, theme: e.target.value})} placeholder="Opcional" /></div>
                 <div className="auth-field"><label>Início *</label><input type="datetime-local" required value={jamForm.startDate} onChange={e => setJamForm({...jamForm, startDate: e.target.value})} /></div>
                 <div className="auth-field"><label>Término *</label><input type="datetime-local" required value={jamForm.endDate} onChange={e => setJamForm({...jamForm, endDate: e.target.value})} /></div>
-                <div className="auth-field">
-                  <label>Status</label>
-                  <select value={jamForm.status} onChange={e => setJamForm({...jamForm, status: e.target.value})} style={{ padding: '0.8rem', borderRadius: 'var(--radius-md)', background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)', width: '100%' }}>
-                    <option value="UPCOMING">Em Breve</option>
-                    <option value="ACTIVE">Ativa</option>
-                    <option value="FINISHED">Encerrada</option>
-                  </select>
-                </div>
               </div>
               <div className="auth-field"><label>Descrição *</label><textarea required rows={3} value={jamForm.description} onChange={e => setJamForm({...jamForm, description: e.target.value})} /></div>
               <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -354,6 +371,66 @@ export default function AdminPanel() {
                 <div className="submission-actions">
                   <button className="btn-approve" style={{ background: '#e0f2fe', color: '#0369a1' }} onClick={() => handleStartEditJam(jam)}>✏️ Editar</button>
                   <button className="btn-reject" onClick={() => handleDeleteJam(jam.id)}>🗑️ Excluir</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ─── Users Tab ─── */}
+      {!loading && !error && tab === 'users' && (
+        <div className="admin-games">
+          <h3 className="admin-subtitle">Gerenciamento de Contas</h3>
+          <p className="admin-rawg-hint" style={{ marginBottom: '1.5rem' }}>
+            Visualize as contas registradas no Gview e altere cargos de administrador.
+          </p>
+          <div className="admin-games-list">
+            {users.length === 0 && <p className="admin-msg">Nenhum usuário cadastrado.</p>}
+            {users.map(u => (
+              <div key={u.id} className="admin-game-row" style={{ padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent-2))',
+                  color: '#fff',
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  flexShrink: 0
+                }}>
+                  {u.name?.charAt(0).toUpperCase()}
+                </div>
+                <div className="admin-game-info" style={{ marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                  <strong style={{ fontSize: '1rem', color: 'var(--color-text)' }}>{u.name}</strong>
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>{u.email}</span>
+                </div>
+                <span className={`badge ${u.role === 'ADMIN' ? 'badge-accent' : 'badge-pending'}`} style={{ textTransform: 'uppercase', fontSize: 'var(--text-xs)', marginLeft: '1rem' }}>
+                  {u.role}
+                </span>
+                <div style={{ display: 'flex', gap: '0.5rem', marginLeft: 'auto' }}>
+                  {u.role === 'ADMIN' ? (
+                    <button 
+                      className="btn-reject" 
+                      style={{ fontSize: 'var(--text-xs)', padding: '0.4rem 0.8rem', cursor: user.id === u.id ? 'not-allowed' : 'pointer', opacity: user.id === u.id ? 0.5 : 1 }}
+                      disabled={user.id === u.id}
+                      onClick={() => handleUpdateRole(u.id, 'PLAYER')}
+                      title={user.id === u.id ? "Você não pode se despromover" : "Tirar cargo de admin"}
+                    >
+                      Remover Admin ✕
+                    </button>
+                  ) : (
+                    <button 
+                      className="btn-approve" 
+                      style={{ fontSize: 'var(--text-xs)', padding: '0.4rem 0.8rem' }}
+                      onClick={() => handleUpdateRole(u.id, 'ADMIN')}
+                    >
+                      Promover a Admin ✓
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

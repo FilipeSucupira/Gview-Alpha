@@ -82,5 +82,3 @@ npm run dev                 # http://localhost:5173
 
 O código-fonte versionado está disponível no repositório GitHub do grupo.  
 Para clonar e executar, siga as instruções de instalação acima.
-
-

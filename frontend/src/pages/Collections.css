@@ -43,15 +43,17 @@
 }
 
 .collection-card {
-  background: #fff;
+  background: var(--color-surface);
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
   padding: 1.5rem;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  color: var(--color-text);
 }
 
 .collection-card:hover {
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-card);
+  border-color: var(--color-accent);
 }
 
 .collection-card-header {
@@ -65,20 +67,21 @@
   font-size: 1.1rem;
   font-weight: 700;
   margin: 0;
+  color: var(--color-text);
 }
 
 .collection-badge {
   font-size: 0.7rem;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #ede9fe;
-  color: #7c3aed;
+  background: rgba(244, 98, 42, 0.1);
+  color: var(--color-accent, #f4622a);
   font-weight: 600;
 }
 
 .collection-desc {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
   margin-bottom: 1rem;
   min-height: 1.5rem;
 }
@@ -95,23 +98,24 @@
   height: 64px;
   border-radius: 6px;
   object-fit: cover;
-  background: #f3f4f6;
+  background: var(--color-surface-2);
 }
 
 .collection-game-thumb-placeholder {
   width: 48px;
   height: 64px;
   border-radius: 6px;
-  background: #f3f4f6;
+  background: var(--color-surface-2);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
+  color: var(--color-text-muted);
 }
 
 .collection-meta {
   font-size: 0.8rem;
-  color: #9ca3af;
+  color: var(--color-text-faint);
   margin-bottom: 1rem;
 }
 
@@ -132,22 +136,23 @@
 }
 
 .btn-primary {
-  background: #7c3aed;
+  background: var(--color-accent, #f4622a);
   color: #fff;
 }
-.btn-primary:hover { background: #6d28d9; }
+.btn-primary:hover { background: var(--color-accent-2, #e0531b); }
 
 .btn-secondary {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
 }
-.btn-secondary:hover { background: #e5e7eb; }
+.btn-secondary:hover { background: var(--color-border); }
 
 .btn-danger {
-  background: #fee2e2;
-  color: #dc2626;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
 }
-.btn-danger:hover { background: #fecaca; }
+.btn-danger:hover { background: rgba(239, 68, 68, 0.25); }
 
 .modal-overlay {
   position: fixed;
