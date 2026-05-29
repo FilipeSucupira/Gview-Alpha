@@ -4,6 +4,11 @@ const AuthContext = createContext(null)
 
 const API = import.meta.env.VITE_API_URL || ''
 
+const sanitizeToken = (token) => {
+  if (typeof token !== 'string') return ''
+  return token.replace(/[^a-zA-Z0-9-_.\/+=]/g, '')
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [token, setToken] = useState(() => localStorage.getItem('gview_token'))
@@ -31,8 +36,10 @@ export function AuthProvider({ children }) {
     })
     const data = await res.json()
     if (!res.ok) throw new Error(data.error || 'Erro ao fazer login')
-    localStorage.setItem('gview_token', data.token)
-    setToken(data.token)
+    
+    const safeToken = sanitizeToken(data.token)
+    localStorage.setItem('gview_token', safeToken)
+    setToken(safeToken)
     setUser(data.user)
     return data.user
   }
@@ -45,8 +52,10 @@ export function AuthProvider({ children }) {
     })
     const data = await res.json()
     if (!res.ok) throw new Error(data.error || 'Erro ao cadastrar')
-    localStorage.setItem('gview_token', data.token)
-    setToken(data.token)
+    
+    const safeToken = sanitizeToken(data.token)
+    localStorage.setItem('gview_token', safeToken)
+    setToken(safeToken)
     setUser(data.user)
     return data.user
   }

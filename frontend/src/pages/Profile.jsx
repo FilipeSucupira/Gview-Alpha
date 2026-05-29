@@ -19,9 +19,10 @@ export default function Profile() {
 
   useEffect(() => {
     if (!user) return
+    const safeUserId = encodeURIComponent(user.id)
     if (tab === 'wishlist') {
       setLoadingData(true)
-      apiFetch(`/api/wishlist/${user.id}`)
+      apiFetch(`/api/wishlist/${safeUserId}`)
         .then(r => r.json())
         .then(data => setWishlist(Array.isArray(data) ? data : (data.data || [])))
         .catch(() => setWishlist([]))
@@ -35,7 +36,7 @@ export default function Profile() {
         .finally(() => setLoadingData(false))
     } else if (tab === 'activity') {
       setLoadingData(true)
-      apiFetch(`/api/reviews/user/${user.id}`)
+      apiFetch(`/api/reviews/user/${safeUserId}`)
         .then(r => r.json())
         .then(data => setReviews(data.data || []))
         .catch(() => setReviews([]))
