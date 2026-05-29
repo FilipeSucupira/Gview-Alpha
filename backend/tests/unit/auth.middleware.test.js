@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { makeMockRes } from '../helpers.js';
 import { authMiddleware, adminOnly } from '../../src/middlewares/auth.js';
 
-const JWT_SECRET = 'gview-secret-dev';
+const JWT_SECRET = process.env.JWT_SECRET || 'gview-secret-dev';
 
 function makeReqRes(headers = {}, user = null) {
   const req = { headers, user };
